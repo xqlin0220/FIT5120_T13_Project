@@ -1,12 +1,17 @@
-// test
+<!-- src/App.vue -->
+<script setup>
+import ParkingForm from './components/ParkingSpot.vue'
+</script>
+
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800 font-sans">
-    <div class="max-w-4xl mx-auto p-8">
-      <SearchForm />
-    </div>
+  <div id="app">
+    <ParkingForm />
   </div>
 </template>
 
-<script setup>
-import SearchForm from './components/SearchForm.vue'
-</script>
+<style>
+#app {
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+</style>
