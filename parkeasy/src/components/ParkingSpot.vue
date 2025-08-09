@@ -192,47 +192,6 @@ const closeResults = () => { showResults.value = false }
       <div v-if="loading">Searching...</div>
       <div v-if="errorMsg && !showResults" class="error-text">{{ errorMsg }}</div>
 
-      <!-- Results list on the search page (only when not sliding) -->
-      <div v-if="!showResults && !loading && normalizedResults.length">
-        <h3 class="section-title">Top recommendations</h3>
-        <ul class="result-list">
-          <li
-            v-for="r in normalizedResults.slice(0,3)"
-            :key="r.id"
-            class="result-card"
-          >
-            <div class="result-title">{{ r.title }}</div>
-            <div v-if="r.postcode">Postcode: {{ r.postcode }}</div>
-            <div v-if="r.day">Day: {{ r.day }}</div>
-            <div v-if="r.hours">Hours: {{ r.hours }}</div>
-            <div v-if="r.price">Price: {{ r.price }}</div>
-            <div v-if="r.status">Status: {{ r.status }}</div>
-            <div v-if="r.ts">Updated: {{ r.ts }}</div>
-
-            <div class="map-actions">
-              <a
-                :href="mapSearchUrl(r)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="map-chip"
-                title="Open in Google Maps"
-              >
-                <i class="pi pi-map-marker" style="margin-right:.35rem;"></i> View map
-              </a>
-              <a
-                :href="mapDirectionsUrl(r)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="map-chip"
-                title="Directions"
-              >
-                <i class="pi pi-directions" style="margin-right:.35rem;"></i> Directions
-              </a>
-            </div>
-          </li>
-        </ul>
-      </div>
-
       <!-- Empty result hint -->
       <div v-if="!showResults && !loading && !normalizedResults.length && selectedDay && selectedTime && postcode" class="summary">
         No matching spots for your selection.
