@@ -1,189 +1,204 @@
 <script setup>
 import { ref } from 'vue'
 
-// PrimeVue  components
+// PrimeVue components
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 
-
+// Form data
 const selectedDay = ref(null)
 const selectedTime = ref(null)
 const postcode = ref('')
 
-
+// Day options for dropdown
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+  .map(d => ({ label: d, value: d }))
 
-
-const timeSlots = Array.from({ length: 26 }, (_, i) => {
-  const hour = i % 12 === 0 ? 12 : i % 12
-  const suffix = i < 12 ? 'AM' : 'PM'
-  return `${hour} ${suffix}`
+// Time slot options for dropdown
+const timeSlots = Array.from({ length: 24 }, (_, i) => {
+  const hour24 = i
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
+  const suffix = hour24 < 12 ? 'AM' : 'PM'
+  return { label: `${hour12}:00 ${suffix}`, value: `${hour12}:00 ${suffix}` }
 })
 
-
+// Form submission handler
 const handleSubmit = () => {
   if (!selectedDay.value || !selectedTime.value || !postcode.value) {
     alert('Please complete all fields.')
     return
   }
-
   console.log('Form submitted:', selectedDay.value, selectedTime.value, postcode.value)
 }
 </script>
+
 <template>
   <div class="page-container">
-    <!-- left part of page -->
-    <div class="left-side">
-  <img src="@/assets/Zim_8.webp" alt="Background" class="side-image" />
-  <h2 class="form-title">Melbourne CBD Parking Recommendation</h2>
-</div>
+    <!-- Branding section -->
+    <div class="branding">
+      <h1 class="brand-title">ParkEasy</h1>
+      <h2 class="brand-subtitle">Find Your Spot, Stress-Free</h2>
+      <p class="brand-description">
+        In the bustling Melbourne CBD, finding a parking spot no longer needs to be stressful.
+        ParkEasy uses smart recommendations to save you time, reduce congestion and carbon emissions,
+        making every journey easier and more eco-friendly.
+      </p>
+    </div>
 
-    <!-- right part of page -->
-    <div class="right-side">
-      <div class="parking-form">
-        <!-- Days -->
-        <div class="form-group">
-          <label for="day">Select a Day:</label>
-          <Dropdown
-            id="day"
-            v-model="selectedDay"
-            :options="days"
-            placeholder="-- Please choose a day --"
-            class="w-full"
-            :style="{ backgroundColor: 'white', borderColor: 'black', color: 'white' }"
-          />
-        </div>
+    <!-- Parking search form -->
+    <div class="parking-form">
+      <!-- Select day -->
+      <div class="form-group">
+        <label for="day">Select a Day:</label>
+        <Dropdown
+          id="day"
+          v-model="selectedDay"
+          :options="days"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="-- Please choose a day --"
+          class="w-full"
+          :style="{ backgroundColor: 'white', borderColor: 'black', color: 'black' }"
+        />
+      </div>
 
-        <!-- time slot -->
-        <div v-if="selectedDay" class="form-group">
-          <label for="time">Select a Time:</label>
-          <Dropdown
-            id="time"
-            v-model="selectedTime"
-            :options="timeSlots"
-            placeholder="-- Choose a time --"
-            class="w-full"
-            :style="{ backgroundColor: 'white', borderColor: 'black', color: 'white' }"
-          />
-        </div>
+      <!-- Select time (always visible, disabled until day is selected) -->
+      <div class="form-group">
+        <label for="time">Select a Time:</label>
+        <Dropdown
+          id="time"
+          v-model="selectedTime"
+          :options="timeSlots"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="-- Choose a time --"
+          class="w-full"
+          :disabled="!selectedDay"
+          :style="{ backgroundColor: 'white', borderColor: 'black', color: 'black' }"
+        />
+      </div>
 
-        <!-- Postcode -->
-        <div class="form-group">
-          <label for="postcode">Enter Postcode:</label>
-          <InputText
-            id="postcode"
-            v-model="postcode"
-            placeholder="e.g. 3000"
-            class="w-full"
-            :style="{ backgroundColor: 'white', borderColor: 'black', color: 'white' }"
-          />
-        </div>
+      <!-- Enter postcode -->
+      <div class="form-group">
+        <label for="postcode">Enter Postcode:</label>
+        <InputText
+          id="postcode"
+          v-model="postcode"
+          placeholder="e.g. 3000"
+          class="w-full"
+          :style="{ backgroundColor: 'white', borderColor: 'black', color: 'black' }"
+        />
+      </div>
 
-        <!-- button for searching -->
-        <div class="form-group">
-          <Button
-            label="Search Parking"
-            icon="pi pi-search"
-            class="w-full"
-            @click="handleSubmit"
-            :style="{ backgroundColor: 'black', borderColor: 'black', color: 'white' }"
-          />
-        </div>
+      <!-- Search button -->
+      <div class="form-group">
+        <Button
+          label="Search Parking"
+          icon="pi pi-search"
+          class="w-full"
+          @click="handleSubmit"
+          :style="{ backgroundColor: 'black', borderColor: 'black', color: 'white' }"
+        />
+      </div>
 
-        
-        <div v-if="selectedDay && selectedTime && postcode" class="summary">
-          <p>
-            You selected:
-            <strong>{{ selectedDay }}</strong> at
-            <strong>{{ selectedTime }}</strong>, Postcode:
-            <strong>{{ postcode }}</strong>
-          </p>
-        </div>
+      <!-- Summary -->
+      <div v-if="selectedDay && selectedTime && postcode" class="summary">
+        <p>
+          You selected:
+          <strong>{{ selectedDay }}</strong> at
+          <strong>{{ selectedTime }}</strong>, Postcode:
+          <strong>{{ postcode }}</strong>
+        </p>
       </div>
     </div>
   </div>
 </template>
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden; 
-}
-</style>
-
 <style scoped>
+/* Main container with background image and dark overlay */
 .page-container {
-  display: flex;
-  height: 100vh;
-  
-}
-
-/* Left part */
-.left-side {
-  flex: 1;
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: url("@/assets/Zim_8.webp") no-repeat center center/cover;
   padding: 2rem;
-  background: linear-gradient(to top right, #000000, #000000d2);
-  position: relative;
-}
-
-
-.side-image {
-  height: 60%;
-  max-width: 80%;
-  margin-bottom: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-
-
-.form-title {
-  position: absolute;
-  bottom: 7rem; 
-  left: 50%;
-  transform: translateX(-50%);
-  color: yellow;
-  font-size: 2rem;
-  font-weight: bold;
+  box-sizing: border-box;
+  color: #fff;
   text-align: center;
-  white-space: nowrap;
 }
 
-/* right part */
-.right-side {
-  flex: 1;
-  background: linear-gradient(to top left, #020202, #020202d8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* Dark semi-transparent overlay for better text readability */
+.page-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 0;
 }
 
+/* Branding section styles */
+.branding {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 2rem;
+}
+
+.brand-title {
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.brand-subtitle {
+  font-size: 1.8rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.brand-description {
+  font-size: 1rem;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+  color: white;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* Parking form styles */
 .parking-form {
+  position: relative;
+  z-index: 1;
   max-width: 500px;
   width: 100%;
   padding: 2rem;
   border-radius: 12px;
-  background-color: var(--surface-card);
-  box-shadow: var(--shadow-4);
-  color: var(--text-color);
-  font-family: var(--font-family);
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  color: #fff;
 }
 
 .form-group {
   margin-bottom: 1.2rem;
-  color: #ffffff;
+  text-align: left;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
 .summary {
   margin-top: 1rem;
   font-size: 1rem;
-  color: var(--text-color-secondary, #f5f4f4);
+  color: #f5f4f4;
 }
 </style>
