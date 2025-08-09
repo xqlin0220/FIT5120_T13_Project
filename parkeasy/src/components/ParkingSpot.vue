@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 // PrimeVue components
 import Dropdown from 'primevue/dropdown'
@@ -10,6 +10,14 @@ import Button from 'primevue/button'
 const selectedDay = ref(null)
 const selectedTime = ref(null)
 const postcode = ref('')
+
+// Backend state for results
+const loading = ref(false)
+const errorMsg = ref('')
+const results = ref([])
+
+// API base
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 // Day options for dropdown
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
@@ -23,13 +31,80 @@ const timeSlots = Array.from({ length: 24 }, (_, i) => {
   return { label: `${hour12}:00 ${suffix}`, value: `${hour12}:00 ${suffix}` }
 })
 
-// Form submission handler
-const handleSubmit = () => {
+// Postcode validator
+const isPostcodeValid = computed(() => /^\d{4}$/.test(postcode.value || ''))
+
+// Normalize results for display
+const normalizedResults = computed(() =>
+  (results.value || []).map((r, i) => {
+    const title = r.name ?? r.address ?? r.suburb ?? `Result #${i + 1}`
+    const day = r.day ?? r.dayOfWeek ?? r.day_of_week ?? null
+    const coords = (r.lat != null && r.lon != null) ? `${r.lat}, ${r.lon}` : null
+    const hours = (r.start_hour != null && r.end_hour != null)
+      ? `${r.start_hour}:00 - ${r.end_hour}:00`
+      : null
+    const price = (r.price_per_hour != null) ? `$${r.price_per_hour}/hr` : null
+    const status = r.status ?? r.Status_Description ?? null
+    const ts = r.statusTimestamp ?? r.Status_Timestamp ?? null
+    return {
+      id: r.id ?? i,
+      title,
+      postcode: r.postcode ?? '',
+      day,
+      coords,
+      hours,
+      price,
+      status,
+      ts
+    }
+  })
+)
+
+// Google Maps search link
+const mapSearchUrl = (r) => {
+  const q = r.title || r.coords || ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`
+}
+
+// Google Maps directions link
+const mapDirectionsUrl = (r) => {
+  const dst = r.coords || r.title || ''
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dst)}`
+}
+
+// Submit handler
+const handleSubmit = async () => {
   if (!selectedDay.value || !selectedTime.value || !postcode.value) {
     alert('Please complete all fields.')
     return
   }
-  console.log('Form submitted:', selectedDay.value, selectedTime.value, postcode.value)
+  if (!isPostcodeValid.value) {
+    alert('Postcode should be a 4-digit number, for example 3000.')
+    return
+  }
+
+  loading.value = true
+  errorMsg.value = ''
+  results.value = []
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/recommend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        day: selectedDay.value,
+        time: selectedTime.value,
+        postcode: postcode.value
+      })
+    })
+    const data = await resp.json()
+    if (!resp.ok) throw new Error(data?.error || 'Request failed')
+    results.value = data?.results || []
+  } catch (e) {
+    errorMsg.value = e.message || 'Network error'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -48,47 +123,50 @@ const handleSubmit = () => {
 
     <!-- Parking search form -->
     <div class="parking-form">
-      <!-- Select day -->
-      <div class="form-group">
-        <label for="day">Select a Day:</label>
-        <Dropdown
-          id="day"
-          v-model="selectedDay"
-          :options="days"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="-- Please choose a day --"
-          class="w-full"
-          :style="{ backgroundColor: 'white', borderColor: 'black', color: 'black' }"
-        />
-      </div>
+      <!-- Wrapper container to prevent style conflicts -->
+      <div class="pv-fix">
+        <!-- Select day -->
+        <div class="form-group">
+          <label for="day">Select a Day:</label>
+          <Dropdown
+            id="day"
+            v-model="selectedDay"
+            :options="days"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="-- Please choose a day --"
+            class="w-full"
+            :style="{ backgroundColor: 'white', borderColor: 'black' }"
+          />
+        </div>
 
-      <!-- Select time (always visible, disabled until day is selected) -->
-      <div class="form-group">
-        <label for="time">Select a Time:</label>
-        <Dropdown
-          id="time"
-          v-model="selectedTime"
-          :options="timeSlots"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="-- Choose a time --"
-          class="w-full"
-          :disabled="!selectedDay"
-          :style="{ backgroundColor: 'white', borderColor: 'black', color: 'black' }"
-        />
-      </div>
+        <!-- Select time -->
+        <div class="form-group">
+          <label for="time">Select a Time:</label>
+          <Dropdown
+            id="time"
+            v-model="selectedTime"
+            :options="timeSlots"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="-- Choose a time --"
+            class="w-full"
+            :disabled="!selectedDay"
+            :style="{ backgroundColor: 'white', borderColor: 'black' }"
+          />
+        </div>
 
-      <!-- Enter postcode -->
-      <div class="form-group">
-        <label for="postcode">Enter Postcode:</label>
-        <InputText
-          id="postcode"
-          v-model="postcode"
-          placeholder="e.g. 3000"
-          class="w-full"
-          :style="{ backgroundColor: 'white', borderColor: 'black', color: 'black' }"
-        />
+        <!-- Enter postcode -->
+        <div class="form-group">
+          <label for="postcode">Enter Postcode:</label>
+          <InputText
+            id="postcode"
+            v-model="postcode"
+            placeholder="e.g. 3000"
+            class="w-full"
+            :style="{ backgroundColor: 'white', borderColor: 'black' }"
+          />
+        </div>
       </div>
 
       <!-- Search button -->
@@ -99,7 +177,58 @@ const handleSubmit = () => {
           class="w-full"
           @click="handleSubmit"
           :style="{ backgroundColor: 'black', borderColor: 'black', color: 'white' }"
+          :disabled="loading"
         />
+      </div>
+
+      <!-- Loading and error messages -->
+      <div v-if="loading">Searching...</div>
+      <div v-if="errorMsg" class="error-text">{{ errorMsg }}</div>
+
+      <!-- Results list -->
+      <div v-if="!loading && normalizedResults.length">
+        <h3 class="section-title">Top recommendations</h3>
+        <ul class="result-list">
+          <li
+            v-for="r in normalizedResults.slice(0,3)"
+            :key="r.id"
+            class="result-card"
+          >
+            <div class="result-title">{{ r.title }}</div>
+            <div v-if="r.postcode">Postcode: {{ r.postcode }}</div>
+            <div v-if="r.day">Day: {{ r.day }}</div>
+            <div v-if="r.hours">Hours: {{ r.hours }}</div>
+            <div v-if="r.price">Price: {{ r.price }}</div>
+            <div v-if="r.status">Status: {{ r.status }}</div>
+            <div v-if="r.ts">Updated: {{ r.ts }}</div>
+
+            <div class="map-actions">
+              <a
+                :href="mapSearchUrl(r)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="map-chip"
+                title="Open in Google Maps"
+              >
+                <i class="pi pi-map-marker" style="margin-right:.35rem;"></i> View map
+              </a>
+              <a
+                :href="mapDirectionsUrl(r)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="map-chip"
+                title="Directions"
+              >
+                <i class="pi pi-directions" style="margin-right:.35rem;"></i> Directions
+              </a>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Empty result hint -->
+      <div v-if="!loading && !normalizedResults.length && selectedDay && selectedTime && postcode" class="summary">
+        No matching spots for your selection.
       </div>
 
       <!-- Summary -->
@@ -116,7 +245,6 @@ const handleSubmit = () => {
 </template>
 
 <style scoped>
-/* Main container with background image and dark overlay */
 .page-container {
   position: relative;
   display: flex;
@@ -124,14 +252,13 @@ const handleSubmit = () => {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: url("@/assets/Zim_8.webp") no-repeat center center/cover;
+  background: url("@/assets/background.jpg") no-repeat center center/cover;
   padding: 2rem;
   box-sizing: border-box;
   color: #fff;
   text-align: center;
 }
 
-/* Dark semi-transparent overlay for better text readability */
 .page-container::before {
   content: "";
   position: absolute;
@@ -143,7 +270,6 @@ const handleSubmit = () => {
   z-index: 0;
 }
 
-/* Branding section styles */
 .branding {
   position: relative;
   z-index: 1;
@@ -168,10 +294,8 @@ const handleSubmit = () => {
   text-align: center;
   color: white;
   line-height: 1.5;
-  word-break: keep-all;
 }
 
-/* Parking form styles */
 .parking-form {
   position: relative;
   z-index: 1;
@@ -182,7 +306,6 @@ const handleSubmit = () => {
   background-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  color: #fff;
 }
 
 .form-group {
@@ -197,8 +320,85 @@ label {
 }
 
 .summary {
-  margin-top: 1rem;
-  font-size: 1rem;
-  color: #f5f4f4;
+  color: #fff;
+}
+
+.section-title {
+  margin: 1rem 0 0.5rem;
+}
+
+.result-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.result-card {
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,.2);
+}
+
+.result-title {
+  font-weight: 700;
+}
+
+.map-actions {
+  display: flex;
+  gap: .5rem;
+  margin: .4rem 0 .2rem;
+}
+
+.map-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: .25rem .6rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  color: #e7f6ff;
+  text-decoration: none;
+  font-size: .85rem;
+}
+
+.map-chip:hover {
+  background: rgba(255,255,255,.2);
+}
+
+.error-text {
+  color: #ffd1d1;
+}
+
+/* Override PrimeVue styles only inside pv-fix */
+:deep(.pv-fix .p-dropdown) {
+  background: #fff !important;
+  border: 1px solid #000 !important;
+}
+:deep(.pv-fix .p-dropdown .p-dropdown-label) {
+  color: #000 !important;
+}
+:deep(.pv-fix .p-dropdown .p-dropdown-trigger) {
+  color: #000 !important;
+}
+:deep(.pv-fix .p-inputtext) {
+  color: #000 !important;
+  background: #fff !important;
+  border: 1px solid #000 !important;
+}
+:deep(.pv-fix .p-dropdown .p-placeholder),
+:deep(.pv-fix .p-placeholder) {
+  color: #666 !important;
+}
+:deep(.pv-fix .p-dropdown-panel) {
+  background: #fff !important;
+}
+:deep(.pv-fix .p-dropdown-items .p-dropdown-item) {
+  color: #000 !important;
+}
+:deep(.pv-fix .p-dropdown-items .p-dropdown-item.p-highlight) {
+  background: rgba(0,0,0,0.06) !important;
+  color: #000 !important;
 }
 </style>

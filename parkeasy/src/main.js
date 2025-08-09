@@ -14,12 +14,21 @@ import Aura from '@primevue/themes/aura'
 import 'primeicons/primeicons.css'
 
 
+
 const app = createApp(App)
 
 
 app.use(PrimeVue, {
   theme: {
-    preset: Aura 
+    preset: Aura,
+    options: {
+      darkModeSelector: 'none',
+
+      cssLayer: {
+        name: 'primevue',
+        order: 'app-styles, primevue'
+      }
+    }
   }
 })
 
