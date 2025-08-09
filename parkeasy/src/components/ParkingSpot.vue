@@ -16,6 +16,9 @@ const loading = ref(false)
 const errorMsg = ref('')
 const results = ref([])
 
+// Slide-in results page state
+const showResults = ref(false)
+
 // API base
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -100,12 +103,16 @@ const handleSubmit = async () => {
     const data = await resp.json()
     if (!resp.ok) throw new Error(data?.error || 'Request failed')
     results.value = data?.results || []
+    showResults.value = true
   } catch (e) {
     errorMsg.value = e.message || 'Network error'
+    showResults.value = true
   } finally {
     loading.value = false
   }
 }
+
+const closeResults = () => { showResults.value = false }
 </script>
 
 <template>
@@ -183,10 +190,10 @@ const handleSubmit = async () => {
 
       <!-- Loading and error messages -->
       <div v-if="loading">Searching...</div>
-      <div v-if="errorMsg" class="error-text">{{ errorMsg }}</div>
+      <div v-if="errorMsg && !showResults" class="error-text">{{ errorMsg }}</div>
 
-      <!-- Results list -->
-      <div v-if="!loading && normalizedResults.length">
+      <!-- Results list on the search page (only when not sliding) -->
+      <div v-if="!showResults && !loading && normalizedResults.length">
         <h3 class="section-title">Top recommendations</h3>
         <ul class="result-list">
           <li
@@ -227,7 +234,7 @@ const handleSubmit = async () => {
       </div>
 
       <!-- Empty result hint -->
-      <div v-if="!loading && !normalizedResults.length && selectedDay && selectedTime && postcode" class="summary">
+      <div v-if="!showResults && !loading && !normalizedResults.length && selectedDay && selectedTime && postcode" class="summary">
         No matching spots for your selection.
       </div>
 
@@ -241,6 +248,70 @@ const handleSubmit = async () => {
         </p>
       </div>
     </div>
+
+    <!-- Slide-in results panel -->
+    <transition name="slide-panel">
+      <aside v-if="showResults" class="slide-panel" aria-modal="true" role="dialog">
+        <div class="slide-header">
+          <button class="slide-back" @click="closeResults">
+            <i class="pi pi-arrow-left" style="margin-right:.4rem;"></i> Back
+          </button>
+          <h3 class="section-title" style="margin:0;">Top recommendations</h3>
+        </div>
+
+        <div class="slide-body">
+          <div v-if="errorMsg" class="error-text" style="margin-bottom:.5rem;">{{ errorMsg }}</div>
+
+          <template v-if="!loading && normalizedResults.length">
+            <ul class="result-list">
+              <li
+                v-for="r in normalizedResults.slice(0,3)"
+                :key="r.id"
+                class="result-card"
+              >
+                <div class="result-title">{{ r.title }}</div>
+                <div v-if="r.postcode">Postcode: {{ r.postcode }}</div>
+                <div v-if="r.day">Day: {{ r.day }}</div>
+                <div v-if="r.hours">Hours: {{ r.hours }}</div>
+                <div v-if="r.price">Price: {{ r.price }}</div>
+                <div v-if="r.status">Status: {{ r.status }}</div>
+                <div v-if="r.ts">Updated: {{ r.ts }}</div>
+
+                <div class="map-actions">
+                  <a
+                    :href="mapSearchUrl(r)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="map-chip"
+                    title="Open in Google Maps"
+                  >
+                    <i class="pi pi-map-marker" style="margin-right:.35rem;"></i> View map
+                  </a>
+                  <a
+                    :href="mapDirectionsUrl(r)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="map-chip"
+                    title="Directions"
+                  >
+                    <i class="pi pi-directions" style="margin-right:.35rem;"></i> Directions
+                  </a>
+                </div>
+              </li>
+            </ul>
+          </template>
+
+          <div v-else-if="!loading" class="summary">
+            No matching spots for your selection.
+          </div>
+        </div>
+      </aside>
+    </transition>
+
+    <!-- Dim overlay behind panel -->
+    <transition name="fade">
+      <div v-if="showResults" class="slide-overlay" @click="closeResults" />
+    </transition>
   </div>
 </template>
 
@@ -400,5 +471,83 @@ label {
 :deep(.pv-fix .p-dropdown-items .p-dropdown-item.p-highlight) {
   background: rgba(0,0,0,0.06) !important;
   color: #000 !important;
+}
+
+/* New: slide-in panel and overlay. These classes are new and do not affect existing styles */
+.slide-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(720px, 100%);
+  height: 100%;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  box-shadow: -8px 0 24px rgba(0,0,0,.35);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1rem 1.2rem;
+}
+
+.slide-header {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: .6rem;
+}
+.slide-back {
+  display: inline-flex;
+  align-items: center;
+  padding: .4rem .8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(0,0,0,.25);
+  color: #fff;
+  cursor: pointer;
+}
+.slide-back:hover { background: rgba(0,0,0,.35); }
+
+.slide-body {
+  overflow-y: auto;
+  padding: .2rem .2rem 0;
+}
+
+/* transitions */
+.slide-panel-enter-from,
+.slide-panel-leave-to { transform: translateX(100%); }
+.slide-panel-enter-active,
+.slide-panel-leave-active { transition: transform 360ms ease; }
+
+.slide-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 40;
+}
+.fade-enter-from,
+.fade-leave-to { opacity: 0; }
+.fade-enter-active,
+.fade-leave-active { transition: opacity 240ms ease; }
+
+/* White translucent frame for each result card */
+.slide-panel .result-card,
+.result-list .result-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+}
+
+.slide-panel .result-card:hover,
+.result-list .result-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.75);
+  transform: translateY(-1px);
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.slide-panel .result-card .result-title,
+.result-list .result-card .result-title {
+  color: #fff;
 }
 </style>
