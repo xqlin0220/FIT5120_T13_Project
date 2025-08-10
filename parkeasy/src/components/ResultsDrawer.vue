@@ -1,3 +1,4 @@
+<!-- src/components/ResultsDrawer.vue -->
 <script setup>
 // Props and events
 const props = defineProps({
@@ -9,6 +10,21 @@ const props = defineProps({
   mapDirectionsUrl: { type: Function, required: true }
 })
 const emit = defineEmits(['close'])
+
+// Helpful links data
+const links = [
+  { label: 'City of Melbourne: Kerbside parking & fees', url: 'https://www.melbourne.vic.gov.au/kerbside-parking-and-fees' },
+  { label: 'VicRoads: Parking rules', url: 'https://www.vicroads.vic.gov.au/safety-and-road-rules/road-rules/a-to-z-of-road-rules/parking%EF%BB%BF' },
+  { label: 'City of Melbourne: Where to park', url: 'https://www.melbourne.vic.gov.au/where-to-park' },
+  { label: 'Wilson Parking: Melbourne CBD', url: 'https://www.wilsonparking.com.au/parking-locations/victoria/melbourne-cbd/' },
+  { label: 'Secure Parking: Melbourne rates', url: 'https://www.secureparking.com.au/en-au/car-park-rates/melbourne/' },
+  { label: 'First Parking: Flat-rate', url: 'https://www.firstparking.com.au/' }
+]
+
+// Collapsible state
+import { ref } from 'vue'
+const linksOpen = ref(false)
+const toggleLinks = () => { linksOpen.value = !linksOpen.value }
 </script>
 
 <template>
@@ -22,8 +38,10 @@ const emit = defineEmits(['close'])
       </div>
 
       <div class="slide-body">
+        <!-- error message -->
         <div v-if="props.errorMsg" class="error-text" style="margin-bottom:.5rem;">{{ props.errorMsg }}</div>
 
+        <!-- results -->
         <template v-if="!props.loading && props.results.length">
           <ul class="result-list">
             <li v-for="r in props.results.slice(0,3)" :key="r.id" class="result-card">
@@ -59,9 +77,41 @@ const emit = defineEmits(['close'])
           </ul>
         </template>
 
+        <!-- empty state -->
         <div v-else-if="!props.loading" class="summary">
           No matching spots for your selection.
         </div>
+
+        <!-- collapsible helpful links -->
+        <div class="help-links">
+          <button
+            class="help-toggle"
+            type="button"
+            @click="toggleLinks"
+            :aria-expanded="linksOpen ? 'true' : 'false'"
+            aria-controls="help-links-panel"
+          >
+            <span class="help-title">
+              <i class="pi pi-info-circle" style="margin-right:.4rem;"></i>
+              Helpful Links
+            </span>
+            <i class="pi" :class="linksOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+          </button>
+
+          <transition name="collapse">
+            <div v-show="linksOpen" id="help-links-panel">
+              <ul class="help-list">
+                <li v-for="link in links" :key="link.url" class="help-card">
+                  <a :href="link.url" target="_blank" rel="noopener" class="help-link">
+                    <i class="pi pi-external-link" style="margin-right:.5rem;"></i>
+                    {{ link.label }}
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </transition>
+        </div>
+        <!-- end collapsible -->
       </div>
     </aside>
   </transition>
@@ -72,7 +122,7 @@ const emit = defineEmits(['close'])
 </template>
 
 <style scoped>
-/* Drawer frame kept exactly like before */
+/* Drawer frame */
 .slide-panel {
   position: fixed;
   top: 0;
@@ -89,14 +139,10 @@ const emit = defineEmits(['close'])
 }
 .slide-header { display: flex; align-items: center; gap: .8rem; margin-bottom: .6rem; }
 .slide-back {
-  display: inline-flex;
-  align-items: center;
-  padding: .4rem .8rem;
-  border-radius: 999px;
+  display: inline-flex; align-items: center;
+  padding: .4rem .8rem; border-radius: 999px;
   border: 1px solid rgba(255,255,255,.35);
-  background: rgba(0,0,0,.25);
-  color: #fff;
-  cursor: pointer;
+  background: rgba(0,0,0,.25); color: #fff; cursor: pointer;
 }
 .slide-back:hover { background: rgba(0,0,0,.35); }
 .slide-body { overflow-y: auto; padding: .2rem .2rem 0; }
@@ -104,30 +150,22 @@ const emit = defineEmits(['close'])
 /* Transitions */
 .slide-panel-enter-from, .slide-panel-leave-to { transform: translateX(100%); }
 .slide-panel-enter-active, .slide-panel-leave-active { transition: transform 360ms ease; }
-
-/* Overlay that darkens and blurs the page behind */
 .slide-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.45);
-  z-index: 40;
-  backdrop-filter: blur(8px) saturate(0.9);
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 40; backdrop-filter: blur(8px) saturate(0.9);
   -webkit-backdrop-filter: blur(8px) saturate(0.9);
 }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .fade-enter-active, .fade-leave-active { transition: opacity 240ms ease; }
 
-/* Result list and cards kept with your classes */
+/* Result cards */
 .result-list { list-style: none; padding: 0; margin: 0; }
 .result-card {
-  margin: 8px 0;
-  padding: 12px;
-  border-radius: 12px;
+  margin: 8px 0; padding: 12px; border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.55);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(4px);
-  color: #fff;
+  backdrop-filter: blur(4px); color: #fff;
 }
 .result-card:hover {
   background: rgba(255, 255, 255, 0.12);
@@ -136,7 +174,6 @@ const emit = defineEmits(['close'])
   transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 .result-title { font-weight: 700; }
-
 .map-actions { display: flex; gap: .5rem; margin: .4rem 0 .2rem; }
 .map-chip {
   display: inline-flex; align-items: center;
@@ -146,7 +183,59 @@ const emit = defineEmits(['close'])
 }
 .map-chip:hover { background: rgba(255,255,255,.2); }
 
-/* Reuse your summary and error styles for consistency */
+/* Helpful links */
+.help-links { margin-top: 1.2rem; }
+.help-toggle {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .6rem .8rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.help-toggle:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.6);
+}
+.help-title {
+  font-size: 1rem; font-weight: 600; display: flex; align-items: center;
+}
+.help-list {
+  list-style: none; padding: 0; margin: .6rem 0 0;
+  display: grid; gap: .6rem;
+}
+.help-card {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+.help-card:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.6);
+  transform: translateY(-1px);
+}
+.help-link {
+  display: flex; align-items: center;
+  padding: .5rem .75rem;
+  color: #e7f6ff; text-decoration: none;
+  font-size: 0.85rem;
+}
+.help-link:hover { color: #fff; }
+
+/* Collapsible transition */
+.collapse-enter-from, .collapse-leave-to {
+  opacity: 0; max-height: 0; overflow: hidden;
+}
+.collapse-enter-active, .collapse-leave-active {
+  transition: all 220ms ease;
+}
+.collapse-enter-to, .collapse-leave-from {
+  opacity: 1; max-height: 600px; /* large enough to fit list */
+}
 .summary { color: #fff; }
 .error-text { color: #ffd1d1; }
 .section-title { margin: 1rem 0 0.5rem; }
