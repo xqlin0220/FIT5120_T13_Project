@@ -34,7 +34,7 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
         <button class="slide-back" @click="emit('close')">
           <i class="pi pi-arrow-left" style="margin-right:.4rem;"></i> Back
         </button>
-        <h3 class="section-title" style="margin:0;">Top recommendations</h3>
+        <h3 class="section-title" style="margin:0;">Top Recommendations</h3>
       </div>
 
       <div class="slide-body">
