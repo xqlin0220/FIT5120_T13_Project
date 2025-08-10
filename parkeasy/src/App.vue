@@ -1,6 +1,6 @@
 <!-- src/App.vue -->
 <script setup>
-import ParkingForm from './components/ParkingSpot.vue'
+import ParkingForm from './views/ParkingSpot.vue'
 </script>
 
 <template>
