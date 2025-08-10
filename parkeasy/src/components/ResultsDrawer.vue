@@ -184,7 +184,10 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
 .map-chip:hover { background: rgba(255,255,255,.2); }
 
 /* Helpful links */
-.help-links { margin-top: 1.2rem; }
+.help-links {
+  margin-top: 1.2rem;
+  padding-left: 1rem;
+}
 .help-toggle {
   width: 100%;
   display: flex; align-items: center; justify-content: space-between;
@@ -205,18 +208,18 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
 }
 .help-list {
   list-style: none; padding: 0; margin: .6rem 0 0;
-  display: grid; gap: .6rem;
+  display: grid; gap: .2rem;
 }
 .help-card {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  background: none;
+  border: none;
+  border-radius: 0;
+  transition: none;
 }
 .help-card:hover {
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.6);
-  transform: translateY(-1px);
+  background: none;
+  border-color:none;
+  transform: none;
 }
 .help-link {
   display: flex; align-items: center;
@@ -224,7 +227,14 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
   color: #e7f6ff; text-decoration: none;
   font-size: 0.85rem;
 }
-.help-link:hover { color: #fff; }
+.help-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  transform: translateX(2px);
+  text-decoration: underline;
+  transition: all 0.18s ease;
+}
 
 /* Collapsible transition */
 .collapse-enter-from, .collapse-leave-to {
