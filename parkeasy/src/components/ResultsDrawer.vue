@@ -144,6 +144,11 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
   border: 1px solid rgba(255,255,255,.35);
   background: rgba(0,0,0,.25); color: #fff; cursor: pointer;
 }
+/* remove default blue focus outline */
+.slide-back { outline: none; }
+.slide-back:focus { outline: none; box-shadow: none; }
+.slide-back::-moz-focus-inner { border: 0; }
+
 .slide-back:hover { background: rgba(0,0,0,.35); }
 .slide-body { overflow-y: auto; padding: .2rem .2rem 0; }
 
@@ -167,13 +172,11 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(4px); color: #fff;
 }
-
 .result-card:hover {
   background: rgba(255, 255, 255, 0.18);
   transform: translateX(2px);
   transition: all 0.18s ease;
 }
-
 .result-title { font-weight: 700; }
 .map-actions { display: flex; gap: .5rem; margin: .4rem 0 .2rem; }
 .map-chip {
@@ -182,7 +185,6 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
   background: rgba(255,255,255,.12);
   color: #e7f6ff; text-decoration: none; font-size: .85rem;
 }
-
 .map-chip:hover {
   background: rgba(255, 255, 255, 0.18);
   transform: translateX(2px);
@@ -250,7 +252,7 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
   transition: all 220ms ease;
 }
 .collapse-enter-to, .collapse-leave-from {
-  opacity: 1; max-height: 600px; /* large enough to fit list */
+  opacity: 1; max-height: 600px;
 }
 .summary { color: #fff; }
 .error-text { color: #ffd1d1; }
