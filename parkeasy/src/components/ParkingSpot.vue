@@ -480,8 +480,10 @@ label {
 .slide-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.35);
+  background: rgba(0,0,0,.45);
   z-index: 40;
+  backdrop-filter: blur(8px) saturate(0.9);
+  -webkit-backdrop-filter: blur(8px) saturate(0.9);
 }
 .fade-enter-from,
 .fade-leave-to { opacity: 0; }
