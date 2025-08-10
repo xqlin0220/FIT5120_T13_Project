@@ -44,7 +44,7 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
         <!-- results -->
         <template v-if="!props.loading && props.results.length">
           <ul class="result-list">
-            <li v-for="r in props.results.slice(0,3)" :key="r.id" class="result-card">
+            <li v-for="r in props.results.slice(0,3)" :key="r.id" class="result-card" tabindex="0" role="button">
               <div class="result-title">{{ r.title }}</div>
               <div v-if="r.postcode">Postcode: {{ r.postcode }}</div>
               <div v-if="r.day">Day: {{ r.day }}</div>
@@ -167,12 +167,13 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(4px); color: #fff;
 }
+
 .result-card:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.75);
-  transform: translateY(-1px);
-  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateX(2px);
+  transition: all 0.18s ease;
 }
+
 .result-title { font-weight: 700; }
 .map-actions { display: flex; gap: .5rem; margin: .4rem 0 .2rem; }
 .map-chip {
@@ -181,7 +182,12 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
   background: rgba(255,255,255,.12);
   color: #e7f6ff; text-decoration: none; font-size: .85rem;
 }
-.map-chip:hover { background: rgba(255,255,255,.2); }
+
+.map-chip:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateX(2px);
+  transition: all 0.18s ease;
+}
 
 /* Helpful links */
 .help-links {
