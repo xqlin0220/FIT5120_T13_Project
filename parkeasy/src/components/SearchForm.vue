@@ -1,8 +1,24 @@
 <script setup>
+/**
+ * PrimeVue Components Imports
+ * - Dropdown: for day and time selection
+ * - InputText: for entering postcode
+ * - Button: for search action
+ */
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 
+/**
+ * Props received from parent
+ * - selectedDay: currently chosen day value
+ * - selectedTime: currently chosen time slot value
+ * - postcode: entered postcode
+ * - days: available day options
+ * - timeSlots: available time slot options (depends on selected day)
+ * - loading: indicates if search is in progress
+ * - errorMsg: error message text to display
+ */
 const props = defineProps({
   selectedDay: String,
   selectedTime: String,
@@ -13,6 +29,13 @@ const props = defineProps({
   errorMsg: String
 })
 
+/**
+ * Emits to notify parent of changes or actions
+ * - update:selectedDay: triggered when day changes
+ * - update:selectedTime: triggered when time changes
+ * - update:postcode: triggered when postcode changes
+ * - submit: triggered when search button is clicked
+ */
 const emit = defineEmits([
   'update:selectedDay',
   'update:selectedTime',

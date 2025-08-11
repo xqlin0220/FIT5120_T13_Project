@@ -1,6 +1,23 @@
 <!-- src/components/ResultsDrawer.vue -->
 <script setup>
-// Props and events
+/**
+ * ResultsDrawer
+ * A right-side sliding panel (drawer) that shows the top parking recommendations.
+ * - Receives loading/error/results state from parent
+ * - Emits "close" to let parent hide the drawer
+ * - Renders helpful external links in a collapsible section
+ */
+
+import { ref } from 'vue'
+
+/**
+ * Props expected from the parent:
+ *  - show: controls drawer visibility
+ *  - loading: network/loading state
+ *  - errorMsg: optional error string to display
+ *  - results: normalized result array (already shaped in parent)
+ *  - mapSearchUrl / mapDirectionsUrl: helpers to build external URLs
+ */
 const props = defineProps({
   show: Boolean,
   loading: Boolean,
@@ -9,9 +26,16 @@ const props = defineProps({
   mapSearchUrl: { type: Function, required: true },
   mapDirectionsUrl: { type: Function, required: true }
 })
+
+/** Emits:
+ *  - close: parent should set show=false when triggered
+ */
 const emit = defineEmits(['close'])
 
-// Helpful links data
+/**
+ * Helpful external links for users to explore parking fees/rules.
+ * UI renders them in a collapsible panel.
+ */
 const links = [
   { label: 'City of Melbourne: Kerbside parking & fees', url: 'https://www.melbourne.vic.gov.au/kerbside-parking-and-fees' },
   { label: 'VicRoads: Parking rules', url: 'https://www.vicroads.vic.gov.au/safety-and-road-rules/road-rules/a-to-z-of-road-rules/parking%EF%BB%BF' },
@@ -21,8 +45,7 @@ const links = [
   { label: 'First Parking: Flat-rate', url: 'https://www.firstparking.com.au/' }
 ]
 
-// Collapsible state
-import { ref } from 'vue'
+/** Local UI state: collapse toggle for the helpful links section */
 const linksOpen = ref(false)
 const toggleLinks = () => { linksOpen.value = !linksOpen.value }
 </script>
@@ -118,7 +141,9 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
 </template>
 
 <style scoped>
-/* Drawer frame */
+/* Drawer shell and layout ===
+   - Fixed to right side, full height
+   - Semi-transparent dark bg with blur to match your existing aesthetic */
 .slide-panel {
   position: fixed;
   top: 0;
@@ -134,6 +159,7 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
   padding: 1rem 1rem 1.2rem;
 }
 .slide-header { display: flex; align-items: center; gap: .8rem; margin-bottom: .6rem; }
+/* Back button matches your existing style */
 .slide-back {
   display: inline-flex; align-items: center;
   padding: .4rem .8rem; border-radius: 999px;
@@ -253,6 +279,9 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
 .summary { color: #fff; }
 .error-text { color: #ffd1d1; }
 .section-title { margin: 1rem 0 0.5rem; }
+/* Green-classification pill ===
+   - Color classes match backend's r.green.color
+   - Yellow softened to better fit your overall UI palette */
 .pill {
   padding: 2px 10px;
   border-radius: 999px;

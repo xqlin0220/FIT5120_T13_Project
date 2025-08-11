@@ -1,30 +1,52 @@
 <script setup>
-// State and computed
+/**
+ * Vue Composition API Imports
+ * - ref: reactive state variables
+ * - computed: derived reactive values
+ */
 import { ref, computed } from 'vue'
 
-// Children
+/**
+ * Child Components
+ * - SearchForm: parking search form UI
+ * - ResultsDrawer: slide-out panel for displaying results
+ */
 import SearchForm from '@/components/SearchForm.vue'
 import ResultsDrawer from '@/components/ResultsDrawer.vue'
 
-// PrimeVue is used inside children, no need here
-
-// Form data
+/**
+ * Form State
+ * - selectedDay: chosen day
+ * - selectedTime: chosen time slot
+ * - postcode: entered postcode
+ */
 const selectedDay = ref(null)
 const selectedTime = ref(null)
 const postcode = ref('')
 
-// Backend state
+/**
+ * Backend and UI State
+ * - loading: indicates API request in progress
+ * - errorMsg: holds any error message
+ * - results: raw data from API
+ * - showResults: controls results drawer visibility
+ */
 const loading = ref(false)
 const errorMsg = ref('')
 const results = ref([])
-
-// Drawer state
 const showResults = ref(false)
 
-// API base
+/**
+ * API Configuration
+ * - API_BASE: backend API base URL
+ */
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-// Options for dropdowns
+/**
+ * Dropdown Options
+ * - days: Monday to Friday
+ * - timeSlots: hourly intervals in 12-hour format
+ */
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
   .map(d => ({ label: d, value: d }))
 
@@ -35,7 +57,10 @@ const timeSlots = Array.from({ length: 24 }, (_, i) => {
   return { label: `${hour12}:00 ${suffix}`, value: `${hour12}:00 ${suffix}` }
 })
 
-// Normalized results used by drawer and inline states
+/**
+ * Computed Property
+ * - normalizedResults: formats API results for display
+ */
 const normalizedResults = computed(() =>
   (results.value || []).map((r, i) => {
     const title = r.name ?? r.address ?? r.suburb ?? `Result #${i + 1}`
@@ -65,7 +90,11 @@ const normalizedResults = computed(() =>
 )
 
 
-// Map links
+/**
+ * Map Link Generators
+ * - mapSearchUrl: Google Maps search link
+ * - mapDirectionsUrl: Google Maps directions link
+ */
 const mapSearchUrl = (r) => {
   const q = r.title || r.coords || ''
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`
@@ -75,7 +104,13 @@ const mapDirectionsUrl = (r) => {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dst)}`
 }
 
-// Submit handler invoked by SearchForm
+
+/**
+ * Form Submission Handler
+ * - Validates input
+ * - Calls backend API
+ * - Updates results state
+ */
 const handleSubmit = async () => {
   if (!selectedDay.value || !selectedTime.value || !postcode.value) {
     alert('Please complete all fields.')
@@ -113,7 +148,8 @@ const closeResults = () => { showResults.value = false }
 
 <template>
   <div class="page-container">
-    <!-- Branding block keeps original look -->
+    <!-- Branding Section -->
+    <!-- App title, tagline, and short description -->
     <div class="branding">
       <h1 class="brand-title">ParkEasy</h1>
       <h2 class="brand-subtitle">Find Your Spot, Stress-Free</h2>
@@ -124,7 +160,8 @@ const closeResults = () => { showResults.value = false }
       </p>
     </div>
 
-    <!-- Search form component, passes down current values and options -->
+    <!-- Search Form Component -->
+    <!-- Passes reactive props and receives submit event -->
     <SearchForm
       v-model:selectedDay="selectedDay"
       v-model:selectedTime="selectedTime"
@@ -135,6 +172,8 @@ const closeResults = () => { showResults.value = false }
       :errorMsg="!showResults ? errorMsg : ''"
       @submit="handleSubmit"
     >
+      <!-- Summary Slot -->
+      <!-- Displays chosen day, time, and postcode -->
       <template #summary>
         <div v-if="selectedDay && selectedTime && postcode" class="summary">
           You selected: <strong>{{ selectedDay }}</strong> at
@@ -143,7 +182,8 @@ const closeResults = () => { showResults.value = false }
       </template>
     </SearchForm>
 
-    <!-- Slide-in drawer for results -->
+    <!-- Results Drawer Component -->
+    <!-- Slide-in panel for showing search results -->
     <ResultsDrawer
       :show="showResults"
       :loading="loading"
