@@ -1,35 +1,36 @@
-# my-clean-app
+## ParkEasy
 
-This template should help get you started developing with Vue 3 in Vite.
+ParkEasy is a Vue 3 + Vite application that helps users find suitable parking spots in Melbourne CBD.  
+It uses a smart recommendation backend and a modern PrimeVue-based UI for day/time/postcode-based searches.
 
-## Recommended IDE Setup
+## Features
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Search by Day & Time** - Choose when you want to park.
+- Postcode Search** - Find spots near your destination.
+- Live Status Indicators** - Color-coded distance and availability info.
+- Map Integration** - Quick Google Maps search & directions.
+- Modern UI** - Built with [PrimeVue](https://primevue.org/) and Aura theme.
+- Fast Dev Experience** - Powered by [Vite](https://vite.dev/).
 
-## Customize configuration
+## Tech Stack
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+- **Frontend Framework:** Vue 3 (Composition API)
+- **UI Library:** PrimeVue + Aura Theme + PrimeIcons
+- **State Management:** Pinia
+- **Build Tool:** Vite
+- **Language:** JavaScript (ES2020+)
 
 ## Project Setup
 
+### Install Dependencies
+terminal 1: 
 ```sh
+cd parkeasy
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
-```
+browser open http://localhost:5173/ or other address
 
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+terminal 2: 
+cd parkeasy/backend
+npm install
+npm run start
