@@ -1,21 +1,23 @@
-
 /* eslint-env node */
 
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Import helper functions for nearest transit stop and green classification
+import { nearestStop, classifyGreen } from '../utils/geoStops.js';
+
+// Create a MySQL connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  password: process.env.DB_PASSWORD, 
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
-
 
 export async function ping() {
   const conn = await pool.getConnection();
@@ -26,34 +28,59 @@ export async function ping() {
     conn.release();
   }
 }
+
+
 function to24h(label) {
   if (!label) return null;
   const [hStr, ampm] = label.split(' ');
   let h = parseInt(hStr, 10);
   const up = (ampm || '').toUpperCase();
+  if (Number.isNaN(h)) return null;
   if (up === 'AM') {
-    if (h === 12) h = 0;
+    if (h === 12) h = 0;// 12 AM is midnight
   } else if (up === 'PM') {
-    if (h !== 12) h += 12;
+    if (h !== 12) h += 12;// Add 12 for PM except 12 PM itself
   }
   return h; // 0..23
 }
-/**
- * 根据 day_of_week + postcode 过滤
- * @param {Object} p
- * @param {string|null} p.day  
- * @param {string|null} p.time      
- * @param {string|number|null} p.postcode
- */
+
+
+function annotateWithTransit(rows) {
+  return (rows || []).map((r, i) => {
+    let ns = null;
+    let green = { label: 'Unknown', color: 'grey' };
+    // If latitude/longitude are available, find nearest transit stop
+    if (r.lat != null && r.lon != null) {
+      ns = nearestStop(Number(r.lat), Number(r.lon)); 
+      if (ns && Number.isFinite(ns.distance_m)) {
+        green = classifyGreen(ns.distance_m);
+      }
+    }
+    return {
+      ...r,
+      nearestStop: ns
+        ? {
+            id: ns.id,
+            name: ns.name,
+            mode: ns.mode,
+            distance_m: ns.distance_m
+          }
+        : null,
+      green
+    };
+  });
+}
+
+// Fetch parking recommendations based on filters (day, time, postcode).
 export async function getRecommendations({ day = null, time = null, postcode = null }) {
   const hour = to24h(time);
   const hStart = hour == null ? null : Math.max(0, hour - 1);
   const hEnd   = hour == null ? null : Math.min(23, hour + 1);
 
-  //  postcode 清洗
+  // Remove commas from postcode
   const cleanPostcode = postcode ? String(postcode).replace(/,/g, '') : null;
 
-  
+  // Main query: aggregated parking free rate for each address
   const sql = `
     SELECT
       address,
@@ -80,9 +107,11 @@ export async function getRecommendations({ day = null, time = null, postcode = n
 
   const [rows] = await pool.query(sql, params);
 
-  if (rows.length > 0) return rows;
+  if (rows.length > 0) {
+    return annotateWithTransit(rows);
+  }
 
-  //  Unoccupied
+   // Fallback query: if no results, return most recent unoccupied spots
   const fallbackSql = `
     SELECT
       address,
@@ -99,9 +128,9 @@ export async function getRecommendations({ day = null, time = null, postcode = n
     ORDER BY Status_Timestamp DESC
     LIMIT 3
   `;
-
   const [fallback] = await pool.query(fallbackSql, [
     day, day, cleanPostcode, cleanPostcode
   ]);
-  return fallback;
+
+  return annotateWithTransit(fallback);
 }

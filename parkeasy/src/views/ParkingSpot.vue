@@ -47,9 +47,23 @@ const normalizedResults = computed(() =>
     const price = (r.price_per_hour != null) ? `$${r.price_per_hour}/hr` : null
     const status = r.status ?? r.Status_Description ?? null
     const ts = r.statusTimestamp ?? r.Status_Timestamp ?? null
-    return { id: r.id ?? i, title, postcode: r.postcode ?? '', day, coords, hours, price, status, ts }
+
+    return {
+      id: r.id ?? i,
+      title,
+      postcode: r.postcode ?? '',
+      day,
+      coords,
+      hours,
+      price,
+      status,
+      ts,
+      green: r.green || null,                // { label, color }
+      nearestStop: r.nearestStop || null     // { name, distance_m, ... }
+    }
   })
 )
+
 
 // Map links
 const mapSearchUrl = (r) => {

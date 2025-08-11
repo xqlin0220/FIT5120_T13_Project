@@ -4,15 +4,13 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { getRecommendations, ping } from './db/index.js';
-
+import { initGeoStops } from './utils/geoStops.js';
 dotenv.config();
 
 const app = express();
 
 // Dynamic CORS configuration: allow any frontend URL during development
-// - `origin: true` will reflect the request origin automatically
-// - `credentials: true` allows cookies and Authorization headers if needed
-// - `methods` and `allowedHeaders` ensure common HTTP verbs and headers are supported
+
 app.use(cors({
   origin: true,
   credentials: true,
@@ -31,6 +29,8 @@ app.get('/health', async (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
+
+initGeoStops(process.env.GEOJSON_PATH || '../public_transport_stops.geojson');
 
 // POST endpoint for frontend to request parking recommendations
 app.post('/api/recommend', async (req, res) => {

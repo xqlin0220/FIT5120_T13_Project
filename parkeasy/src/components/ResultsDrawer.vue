@@ -45,34 +45,30 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
         <template v-if="!props.loading && props.results.length">
           <ul class="result-list">
             <li v-for="r in props.results.slice(0,3)" :key="r.id" class="result-card" tabindex="0" role="button">
-              <div class="result-title">{{ r.title }}</div>
-              <div v-if="r.postcode">Postcode: {{ r.postcode }}</div>
-              <div v-if="r.day">Day: {{ r.day }}</div>
-              <div v-if="r.hours">Hours: {{ r.hours }}</div>
-              <div v-if="r.price">Price: {{ r.price }}</div>
-              <div v-if="r.status">Status: {{ r.status }}</div>
-              <div v-if="r.ts">Updated: {{ r.ts }}</div>
-
-              <div class="map-actions">
-                <a
-                  :href="props.mapSearchUrl(r)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="map-chip"
-                  title="Open in Google Maps"
-                >
-                  <i class="pi pi-map-marker" style="margin-right:.35rem;"></i> View map
-                </a>
-                <a
-                  :href="props.mapDirectionsUrl(r)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="map-chip"
-                  title="Directions"
-                >
-                  <i class="pi pi-directions" style="margin-right:.35rem;"></i> Directions
-                </a>
-              </div>
+              <div class="result-title-row">
+  <div class="result-title">{{ r.title }}</div>
+</div>
+  <div class="map-actions">
+    <span v-if="r.green" class="pill" :class="r.green.color">{{ r.green.label }}</span>
+    <a
+      :href="props.mapSearchUrl(r)"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="map-chip"
+      title="Open in Google Maps"
+    >
+      <i class="pi pi-map-marker" style="margin-right:.35rem;"></i> View map
+    </a>
+    <a
+      :href="props.mapDirectionsUrl(r)"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="map-chip"
+      title="Directions"
+    >
+      <i class="pi pi-directions" style="margin-right:.35rem;"></i> Directions
+    </a>
+  </div>
             </li>
           </ul>
         </template>
@@ -257,4 +253,22 @@ const toggleLinks = () => { linksOpen.value = !linksOpen.value }
 .summary { color: #fff; }
 .error-text { color: #ffd1d1; }
 .section-title { margin: 1rem 0 0.5rem; }
+.pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #fff;
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.25),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.15),
+              0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.pill.green { background-color: rgba(22, 163, 74, 0.4); }
+.pill.yellow { background-color: rgba(255, 215, 0, 0.35); }
+.pill.red { background-color: rgba(239, 68, 68, 0.4); }
+.pill.grey { background-color: rgba(107, 114, 128, 0.4); }
 </style>
