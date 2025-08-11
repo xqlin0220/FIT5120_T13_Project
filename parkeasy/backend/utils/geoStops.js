@@ -16,11 +16,11 @@ function haversine(lat1, lon1, lat2, lon2) {
 
 
 let STOPS = [];
-// key = "lat,lon" → {stop, distance_m}
+// key = "lat,lon" to {stop, distance_m}
 const CACHE = new Map();
 
 /**
- * 加载 GeoJSON
+ * loads transit stops from a GeoJSON file.
  * @param {string} filePath
  */
 export function initGeoStops(filePath) {
@@ -41,7 +41,7 @@ export function initGeoStops(filePath) {
         props.station_name ||
         `Stop #${idx + 1}`;
 
-      // 交通方式（可选）
+      // determine the mode of transport
       const mode =
         props.mode ||
         props.route_type ||
@@ -51,10 +51,10 @@ export function initGeoStops(filePath) {
 
       return { id: props.stop_id || idx, name, mode, lat, lon };
     })
-    // 过滤坐标完整的数据
+    // filter out invalid stops
     .filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lon));
 
-  console.log(`🚏 Loaded ${STOPS.length} transit stops from ${abs}`);
+  console.log(`Loaded ${STOPS.length} transit stops from ${abs}`);
 }
 
 /**
