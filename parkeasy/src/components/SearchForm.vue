@@ -6,7 +6,7 @@
  * - Button: for search action
  */
 import Dropdown from 'primevue/dropdown'
-import InputText from 'primevue/inputtext'
+import { computed } from 'vue'
 import Button from 'primevue/button'
 
 /**
@@ -22,7 +22,8 @@ import Button from 'primevue/button'
 const props = defineProps({
   selectedDay: String,
   selectedTime: String,
-  postcode: String,
+  selectedPostcode: String,
+  postcodes: { type: Array, default: () => [] },
   days: { type: Array, default: () => [] },
   timeSlots: { type: Array, default: () => [] },
   loading: Boolean,
@@ -39,16 +40,23 @@ const props = defineProps({
 const emit = defineEmits([
   'update:selectedDay',
   'update:selectedTime',
-  'update:postcode',
+  'update:selectedPostcode',
   'submit'
 ])
+
+const canSearch = computed(() =>
+  !!props.selectedDay &&
+  !!props.selectedTime &&
+  !!props.selectedPostcode &&
+  !props.loading
+)
 </script>
 
 <template>
   <div class="parking-form">
     <div class="pv-fix">
       <div class="form-group">
-        <label for="day">Select a Day:</label>
+        <label for="day">Select a working day:</label>
         <Dropdown
           id="day"
           :modelValue="props.selectedDay"
@@ -63,7 +71,7 @@ const emit = defineEmits([
       </div>
 
       <div class="form-group">
-        <label for="time">Select a Time:</label>
+        <label for="time">Select an approx. arrival time:</label>
         <Dropdown
           id="time"
           :modelValue="props.selectedTime"
@@ -71,7 +79,7 @@ const emit = defineEmits([
           :options="props.timeSlots"
           optionLabel="label"
           optionValue="value"
-          placeholder="-- Choose a time --"
+          placeholder="-- Choose your approx. arrival time --"
           class="w-full"
           :disabled="!props.selectedDay"
           :style="{ backgroundColor: 'white', borderColor: 'black' }"
@@ -79,12 +87,15 @@ const emit = defineEmits([
       </div>
 
       <div class="form-group">
-        <label for="postcode">Enter Postcode:</label>
-        <InputText
+        <label for="postcode">Choose a city postcode:</label>
+        <Dropdown
           id="postcode"
-          :modelValue="props.postcode"
-          @update:modelValue="val => emit('update:postcode', val)"
-          placeholder="e.g. 3000"
+          :modelValue="props.selectedPostcode"
+          @update:modelValue="val => emit('update:selectedPostcode', val)"
+          :options="props.postcodes"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="-- Select a postcode --"
           class="w-full"
           :style="{ backgroundColor: 'white', borderColor: 'black' }"
         />
@@ -95,9 +106,8 @@ const emit = defineEmits([
       <Button
         label="Search Parking"
         icon="pi pi-search"
-        class="w-full"
-        :disabled="props.loading"
-        :style="{ backgroundColor: 'black', borderColor: 'black', color: 'white' }"
+        class="w-full search-btn"
+        :disabled="!canSearch"
         @click="emit('submit')"
       />
     </div>
@@ -145,5 +155,22 @@ label { font-weight: bold; margin-bottom: 0.5rem; display: block; }
 :deep(.pv-fix .p-dropdown-items .p-dropdown-item.p-highlight) {
   background: rgba(0,0,0,0.06) !important;
   color: #000 !important;
+}
+:deep(.search-btn) {
+  background-color: #bbb !important;
+  border-color: #bbb !important;
+  color: #000 !important;
+  transition: background-color 0.2s ease;
+}
+
+:deep(.search-btn:hover:not(.p-disabled)) {
+  background-color: #aaa !important;
+  border-color: #aaa !important;
+}
+
+:deep(.search-btn.p-disabled) {
+  background-color: #ddd !important;
+  border-color: #ddd !important;
+  color: #888 !important;
 }
 </style>
