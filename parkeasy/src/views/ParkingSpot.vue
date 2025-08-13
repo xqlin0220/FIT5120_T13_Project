@@ -12,7 +12,7 @@ import { ref, computed } from 'vue'
  * - ResultsDrawer: slide-out panel for displaying results
  */
 import SearchForm from '@/components/SearchForm.vue'
-import ResultsDrawer from '@/components/ResultsDrawer.vue'
+import ResultsDrawer from '@/components/ResultsDrawer/ResultsDrawer.vue'
 
 /**
  * Form State
@@ -166,7 +166,7 @@ const closeResults = () => { showResults.value = false }
       <h1 class="brand-title">ParkEasy</h1>
       <h2 class="brand-subtitle">Find Your Spot, Stress-Free</h2>
       <p class="brand-description">
-        In the bustling Melbourne CBD, finding a parking spot no longer needs to be stressful.
+        
         ParkEasy uses smart recommendations to save you time, reduce congestion and carbon emissions,
         making every journey easier and more eco-friendly.
       </p>

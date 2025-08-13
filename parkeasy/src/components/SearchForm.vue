@@ -157,9 +157,9 @@ label { font-weight: bold; margin-bottom: 0.5rem; display: block; }
   color: #000 !important;
 }
 :deep(.search-btn) {
-  background-color: #bbb !important;
+  background-color: #000000 !important;
   border-color: #bbb !important;
-  color: #000 !important;
+  color: #f8f8f8 !important;
   transition: background-color 0.2s ease;
 }
 

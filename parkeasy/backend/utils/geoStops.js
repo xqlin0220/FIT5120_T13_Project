@@ -124,7 +124,7 @@ export function nearestStop(lat, lon) {
  */
 export function classifyGreen(meters) {
   if (!Number.isFinite(meters)) return { label: 'Unknown', color: 'grey' };
-  if (meters <= 50) return { label: '😀', color: 'green' };
-  if (meters <= 600) return { label: '😐', color: 'yellow' };
-  return { label: '😭', color: 'red' };
+  if (meters <= 50) return { label: '', color: 'green' };
+  if (meters <= 600) return { label: '', color: 'yellow' };
+  return { label: '', color: 'red' };
 }

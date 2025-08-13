@@ -164,22 +164,24 @@ export async function getRecommendations({ day = null, time = null, postcode = n
   // Remove commas from postcode
   const cleanPostcode = postcode ? String(postcode).replace(/,/g, '') : null;
 
-  // Main query: aggregated parking free rate for each address
+// Main query
   const sql = `
     SELECT
-      address,
-      REPLACE(postcode, ',', '') AS postcode,
-      suburb,
-      SUM(CASE WHEN Status_Description = 'Unoccupied' THEN 1 ELSE 0 END) / COUNT(*) AS freeRate,
+      c.street_address AS address,
+      c.postcode,
+      l.suburb,
+      SUM(CASE WHEN ps.status_desc = 'Unoccupied' THEN 1 ELSE 0 END) / COUNT(*) AS freeRate,
       COUNT(*) AS totalSamples,
-      MAX(Status_Timestamp) AS latestTs,
-      AVG(lat) AS lat,
-      AVG(lon) AS lon
-    FROM ReadyData
-    WHERE ( ? IS NULL OR day_of_week = ? )
-      AND ( ? IS NULL OR REPLACE(postcode, ',', '') = ? )
-      ${hour == null ? '' : 'AND HOUR(Status_Timestamp) BETWEEN ? AND ?'}
-    GROUP BY address, REPLACE(postcode, ',', ''), suburb
+      MAX(ps.status_timestamp) AS latestTs,
+      AVG(CAST(c.lat AS DECIMAL(10,6))) AS lat,
+      AVG(CAST(c.lon AS DECIMAL(10,6))) AS lon
+    FROM parking_status ps
+    JOIN carpark c       ON c.kerbside_id = ps.kerbside_id
+    LEFT JOIN location l ON l.postcode   = c.postcode
+    WHERE ( ? IS NULL OR ps.day_of_week = ? )
+      AND ( ? IS NULL OR c.postcode = ? )
+      ${hour == null ? '' : 'AND HOUR(ps.status_timestamp) BETWEEN ? AND ?'}
+    GROUP BY c.street_address, c.postcode, l.suburb
     HAVING totalSamples >= 1
     ORDER BY freeRate DESC, latestTs DESC
     LIMIT 3
@@ -190,31 +192,28 @@ export async function getRecommendations({ day = null, time = null, postcode = n
     : [day, day, cleanPostcode, cleanPostcode, hStart, hEnd];
 
   const [rows] = await pool.query(sql, params);
+  if (rows.length > 0) return annotateWithTransit(rows);
 
-  if (rows.length > 0) {
-    return annotateWithTransit(rows);
-  }
-
-   // Fallback query: if no results, return most recent unoccupied spots
+  // Fallback
   const fallbackSql = `
     SELECT
-      address,
-      REPLACE(postcode, ',', '') AS postcode,
-      suburb,
+      c.street_address AS address,
+      c.postcode,
+      l.suburb,
       1.0 AS freeRate,
       1   AS totalSamples,
-      Status_Timestamp AS latestTs,
-      lat, lon
-    FROM ReadyData
-    WHERE ( ? IS NULL OR day_of_week = ? )
-      AND ( ? IS NULL OR REPLACE(postcode, ',', '') = ? )
-      AND Status_Description = 'Unoccupied'
-    ORDER BY Status_Timestamp DESC
+      ps.status_timestamp AS latestTs,
+      CAST(c.lat AS DECIMAL(10,6)) AS lat,
+      CAST(c.lon AS DECIMAL(10,6)) AS lon
+    FROM parking_status ps
+    JOIN carpark c       ON c.kerbside_id = ps.kerbside_id
+    LEFT JOIN location l ON l.postcode   = c.postcode
+    WHERE ( ? IS NULL OR ps.day_of_week = ? )
+      AND ( ? IS NULL OR c.postcode = ? )
+      AND ps.status_desc = 'Unoccupied'
+    ORDER BY ps.status_timestamp DESC
     LIMIT 3
   `;
-  const [fallback] = await pool.query(fallbackSql, [
-    day, day, cleanPostcode, cleanPostcode
-  ]);
-
+  const [fallback] = await pool.query(fallbackSql, [day, day, cleanPostcode, cleanPostcode]);
   return annotateWithTransit(fallback);
 }
